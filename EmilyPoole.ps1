@@ -41,17 +41,23 @@ Invoke-Repave {
     
     # Visual Studio
     Install-VisualStudio2013Iso "isos\en_visual_studio_ultimate_2013_with_update_2_x86_dvd_4238214.iso" {
-        Install-VS2013Extension "http://visualstudiogallery.msdn.microsoft.com/6a2ae0fa-bd4e-4712-9170-abe92c63c05c/file/109467/20/MattDavies.TortoiseGitToolbar.vsix"
         Install-VS2013Extension "http://visualstudiogallery.msdn.microsoft.com/1f6ec6ff-e89b-4c47-8e79-d2d68df894ec/file/37912/30/RazorGenerator.vsix"
-        Install-VS2013Extension "http://visualstudiogallery.msdn.microsoft.com/71a4e9bd-f660-448f-bd92-f5a65d39b7f0/file/52593/29/chutzpah.visualstudio.vsix"
-        Install-VS2013Extension "http://visualstudiogallery.msdn.microsoft.com/f8741f04-bae4-4900-81c7-7c9bfb9ed1fe/file/66979/24/Chutzpah.VS2012.vsix"
-        Install-VS2013Extension "http://visualstudiogallery.msdn.microsoft.com/c6d1c265-7007-405c-a68b-5606af238ece/file/106247/16/SquaredInfinity.VSCommands.VS12.vsix"
         Install-VS2013Extension "http://visualstudiogallery.msdn.microsoft.com/69023d00-a4f9-4a34-a6cd-7e854ba318b5/file/55948/24/SlowCheetah.vsix"
+        Install-VS2013Extension "http://visualstudiogallery.msdn.microsoft.com/dbcb8670-889e-4a54-a226-a48a15e4cace/file/117115/4/ProPowerTools.vsix"
+        Install-VS2013Extension "http://visualstudiogallery.msdn.microsoft.com/9e08e5d3-6eb4-4e73-a045-6ea2a5cbdabe/file/112381/2/ColorThemeEditor.vsix"
+        Install-VS2013Extension "http://visualstudiogallery.msdn.microsoft.com/71870f0e-87bb-4a5f-8abd-e8e5e0ccb900/file/84362/3/TroutZoom.vsix"
     }
     Install-ChocolateyPackage XUnit.VisualStudio
     Install-ChocolateyPackage ReSharper
     Restore-ReSharperExtensions "packages.config"
 
+    Install-ChocolateyPackage SourceTree
+    Install-ChocolateyPackage git
+    Install-ChocolateyPackage diffmerge
+    Install-ChocolateyPackage git-difftool-diffmerge
+    Install-ChocolateyPackage linqpad4 -RunIfInstalled { Add-Todo "Register linqpad via: LINQPad.exe -activate=PRODUCT_CODE" }
+    Install-ChocolateyPackage fiddler4
+    
     # Web Deploy
     Install-WebDeploy35
     
@@ -60,20 +66,24 @@ Invoke-Repave {
     Install-AzureManagementStudio
     
     # Utils
-    Install-ChocolateyPackage fiddler4
+    Install-ChocolateyPackage SublimeText3
+    Install-ChocolateyPackage SublimeText3.PackageControl
+    Install-ChocolateyPackage SublimeText3.PowershellAlias
+    Install-ChocolateyPackage sharex
     Install-ChocolateyPackage sysinternals
     Install-ChocolateyPackage windirstat
     Install-ChocolateyPackage 7zip
     Install-ChocolateyPackage AdobeReader
-    Install-ChocolateyPackage vim
     Install-ChocolateyPackage lockhunter
     Install-ChocolateyPackage paint.net
-    Install-ChocolateyPackage linqpad4 -RunIfInstalled { Add-Todo "Register linqpad via: LINQPad.exe -activate=PRODUCT_CODE" }
+    Install-ChocolateyPackage webpi
+    Install-ChocolateyPackage synergy
+    Install-ChocolateyPackage rdm
     
     # Internet
-    Install-ChocolateyPackage GoogleChrome
-    Install-ChocolateyPackage Firefox -RunIfInstalled { Add-Todo "Set Firefox to not auto-update if using for Selenium testing" }
+    Install-ChocolateyPackage allbrowsers -RunIfInstalled { Add-Todo "Set Firefox to not auto-update if using for Selenium testing" }
     Install-ChocolateyPackage Skype
+    Install-ChocolateyPackage pidgin
     Install-ChocolateyPackage Dropbox
     Install-ChocolateyPackage lastpass
 
@@ -84,9 +94,7 @@ Invoke-Repave {
     # Other
     Install-ChocolateyPackage steam -RunIfInstalled { Add-Todo "Restore game backups and save games" }
     Install-ChocolateyPackage nodejs.install
-    Install-ChocolateyPackage ruby
-    Install-ITunesMusicLibrary "iTunes"
-    Install-ChocolateyPackage iTunes
+    Install-ChocolateyPackage spotify
     if (-not (Test-VirtualMachine)) {
         Install-HyperV
     }
