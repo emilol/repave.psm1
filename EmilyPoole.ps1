@@ -40,7 +40,7 @@ Invoke-Repave {
     Install-ChocolateyPackage UrlRewrite
     
     # Visual Studio
-    Install-VisualStudio2013Iso "isos\en_visual_studio_ultimate_2013_with_update_2_x86_dvd_4238214.iso" {
+    Install-VisualStudio2013Iso "isos\en_visual_studio_professional_2013_with_update_2_x86_dvd_4238045.iso" {
         Install-VS2013Extension "http://visualstudiogallery.msdn.microsoft.com/1f6ec6ff-e89b-4c47-8e79-d2d68df894ec/file/37912/30/RazorGenerator.vsix"
         Install-VS2013Extension "http://visualstudiogallery.msdn.microsoft.com/69023d00-a4f9-4a34-a6cd-7e854ba318b5/file/55948/24/SlowCheetah.vsix"
         Install-VS2013Extension "http://visualstudiogallery.msdn.microsoft.com/dbcb8670-889e-4a54-a226-a48a15e4cace/file/117115/4/ProPowerTools.vsix"
