@@ -10,7 +10,7 @@ Import-Module "$(Split-Path $MyInvocation.MyCommand.Path)\repave.psm1" -Force
 Invoke-Repave {
 
     # Timezone
-    tzutil /s "W. Australia Standard Time"
+    tzutil /s "E. Australia Standard Time_dstoff"
 
     # Dev directories
     mkdir c:\dev\oss -ErrorAction SilentlyContinue | Out-Null
