@@ -114,7 +114,6 @@ function Install-IntelRST() {
 }
 
 function Install-Git() {
-    Install-ChocolateyPackage TortoiseGit
     Install-ChocolateyPackage poshgit
     Add-ToPath "C:\Program Files (x86)\Git\bin"
     if ((Test-Path ".ssh") -and (-not (Test-Path "~\.ssh"))) {
@@ -165,7 +164,7 @@ function Install-VisualStudio2013Iso($iso, $onInstall) {
         $iso = Join-Path (Get-SourcePath) $iso
         Write-Output "Installing VS Ultimate 2013 from .iso`r`n"
         $mount = Mount-DiskImage $iso -PassThru | Get-Volume
-        Start-Process -FilePath "$($mount.DriveLetter):\vs_ultimate.exe" -ArgumentList "/passive /norestart" -Wait
+        Start-Process -FilePath "$($mount.DriveLetter):\vs_professional.exe" -ArgumentList "/passive /norestart" -Wait
         Dismount-DiskImage $iso
 
         Add-Todo "Open Visual Studio and log in with MSDN credentials"
