@@ -1,6 +1,15 @@
-[branch]
-	autosetuprebase = always
-[alias]
-	st = status
 [core]
-	autocrlf = false
+	editor = "~/AppData/Local/Programs/Microsoft VS Code/Code.exe" --wait
+[merge]
+    tool = vscode
+[mergetool "vscode"]
+    cmd = code --wait $MERGED
+[diff]
+    tool = vscode
+[difftool "vscode"]
+    cmd = code --wait --diff $LOCAL $REMOTE
+[user]
+	name = Emily Taylor
+	email = emilytaylor@live.com.au
+[includeif "gitdir:C:/Code/Octopus/"]
+	path = "C:/Code/Octopus/.gitconfig"

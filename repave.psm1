@@ -15,7 +15,6 @@
         }
 
         Install-Chocolatey
-        Install-WebPI
 
         &$script
 
@@ -61,19 +60,9 @@ function Install-Chocolatey() {
     }
 }
 
-function Install-WebPI() {
-    if ($global:installedPackages -match "^webpicmd \d") {
-        Write-Output "webpicmd already installed`r`n"
-    } else {
-        cinst webpicmd -Version 7.1.1374 | Out-Default # Latest version has a bug
-        cinst NetFx3 -Source WindowsFeatures | Out-Default
-    }
-}
-
 function Get-SourcePath() {
     return (Get-variable -Name scriptpath -Scope Global).Value
 }
-
 function Test-Administrator() {
     $user = [Security.Principal.WindowsIdentity]::GetCurrent();
     return (New-Object Security.Principal.WindowsPrincipal $user).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)
@@ -95,127 +84,51 @@ function Set-AdvancedWindowsExplorerOptions() {
     }
 }
 
-function Install-EncryptingFilesystemCert($pfx, $rootPfx) {
-    Write-Output "Installing encrypted filesystem cert`r`n"
-    $password = Read-Host -AsSecureString "Enter the Encryption.pfx password"
-    Import-PfxCertificate -FilePath $pfx cert:\CurrentUser\My -Exportable -Password $password
-    Import-PfxCertificate -FilePath $rootPfx cert:\CurrentUser\TrustedPeople -Exportable -Password $password
-}
-
-function Install-IntelRST() {
-    if (-not (Test-Path "C:\Program Files\Intel\Intel(R) Rapid Storage Technology")) {
-        Write-Output "Installing Intel Rapid Storage Technology`r`n"
-        if (-not (Test-Path Installers\SetupRST.exe)) {
-            (new-object net.webclient).DownloadFile('http://downloadmirror.intel.com/23496/eng/SetupRST.exe', 'Installers\SetupRST.exe')
-        }
-        Start-Process -FilePath Installers\SetupRST.exe -Wait
-        Add-Todo "Check http://files.thecybershadow.net/trimcheck/trimcheck-0.6.exe"
-    }
-}
-
-function Install-Git() {
-    Install-ChocolateyPackage poshgit
+function Install-Git {
+    Install-ChocolateyPackage git
     Add-ToPath "C:\Program Files (x86)\Git\bin"
+    
     if ((Test-Path ".ssh") -and (-not (Test-Path "~\.ssh"))) {
         Write-Output "Copying .ssh to ~`r`n"
         cp .ssh $env:userprofile -Recurse
-        Set-TortoiseGitToUseSshKeys
     }
+}
+
+function Copy-GitConfig($workFolder) {
     if ((Test-Path ".gitconfig") -and (-not (Test-Path "~\.gitconfig"))) {
         Write-Output "Copying .gitconfig to ~`r`n"
         cp .gitconfig $env:userprofile -Recurse
     }
-}
-
-function Install-IIS() {
-    if (-not (Test-Path "c:\inetpub")) {
-        cinst IIS-WebServerRole -Source WindowsFeatures | Out-Default
-        cinst IIS-ASPNET45 -Source WindowsFeatures | Out-Default
-    } else {
-        Write-Output "IIS already installed`r`n"
+    if ((Test-Path "Configurations/.gitconfig.work") -and (-not (Test-Path "$workFolder.gitconfig"))) {
+        cp .gitconfig.work "$workFolder.gitconfig" -Recurse
     }
 }
 
-function Install-WebDeploy35() {
-    if (-not (Test-Path "C:\Program Files\IIS\Microsoft Web Deploy V3")) {
-        cmd.exe /c "webpicmd /Install /AcceptEula /SuppressReboot /Products:WDeployPS" 2>&1 | Out-Default
-    } else {
-        Write-Output "WebDeploy 3.5 already installed`r`n"
+function Install-Wsl2() {
+    if (-not (Check-WindowsFeature Microsoft-Windows-Subsystem-Linux)) {
+        cinst Microsoft-Windows-Subsystem-Linux -Source WindowsFeatures | Out-Default
+        cinst VirtualMachinePlatform  -Source WindowsFeatures | Out-Default
+        wsl --set-default-version 2
     }
+    Install-ChocolateyPackage wsl-ubuntu-2004
 }
 
-function Install-VisualStudio2013($product, $features, $onInstall) {
-    if ($product -eq $null) {
-        $product = "Professional"
-    }
-    if ($features -eq $null) {
-        $features = "WebTools SQL Win8SDK Win81SDK WindowsPhone80 WindowsPhone81 OfficeDeveloperTools Blend LightSwitch"
-    }
-    Install-ChocolateyPackage "VisualStudio2013$product" "/Features:'$vsFeatures'"
+function Check-WindowsFeature {
+    [CmdletBinding()]
+    param(
+        [Parameter(Position=0,Mandatory=$true)] [string]$FeatureName 
+    )  
+    return (Get-WindowsOptionalFeature -FeatureName $FeatureName -Online).State -eq "Enabled"
+}
 
+function Install-VisualStudio2019() {
+    $vs2019Exe = "Installers\vs_professional.exe"
+    if (-not (Test-Path $vs2019Exe)) {
+        $vs2019Url = 'https://download.visualstudio.microsoft.com/download/pr/3a7354bc-d2e4-430f-92d0-9abd031b5ee5/5f7b7f9ddaecfdb28c06d93129af3ea3dd8f600127b7e5161f11339da363df78/vs_Professional.exe'
+        Invoke-WebRequest -Uri $vs2019Url -OutFile $vs2019Exe
+    }
+    Start-Process -FilePath $vs2019Exe -ArgumentList "--config Configurations/.vsconfig --wait --passive --norestart" -Wait
     Add-Todo "Open Visual Studio and log in with MSDN credentials"
-    if ($onInstall -ne $null) {
-        &$onInstall
-    }
-}
-
-function Install-VisualStudio2013Iso($iso, $onInstall) {
-    if (-not (Test-Path "C:\Program Files (x86)\Microsoft Visual Studio 12.0")) {
-        $iso = Join-Path (Get-SourcePath) $iso
-        Write-Output "Installing VS Ultimate 2013 from .iso`r`n"
-        $mount = Mount-DiskImage $iso -PassThru | Get-Volume
-        Start-Process -FilePath "$($mount.DriveLetter):\vs_professional.exe" -ArgumentList "/passive /norestart" -Wait
-        Dismount-DiskImage $iso
-
-        Add-Todo "Open Visual Studio and log in with MSDN credentials"
-        if ($onInstall -ne $null) {
-            &$onInstall
-        }
-    } else {
-        Write-Output "VS2013 already installed`r`n"
-    }
-}
-
-function Restore-ReSharperExtensions($pathToPackagesConfig) {
-    if (-not (Test-Path "$env:APPDATA\JetBrains\ReSharper\vAny\packages.config")) {
-        Write-Output "Adding $pathToPackagesConfig to ReSharper`r`n"
-        mkdir "$env:APPDATA\JetBrains\ReSharper\vAny" -ErrorAction SilentlyContinue | Out-Null
-        cp $pathToPackagesConfig "$env:APPDATA\JetBrains\ReSharper\vAny"
-        Add-Todo "Open ReSharper Extension Manager and click to restore packages"
-    } else {
-        Write-Output "ReSharper extensions already installed`r`n"
-    }
-}
-
-function Install-AzureSDK2.3() {
-    if (-not (Test-Path "C:\Program Files\Microsoft SDKs\Windows Azure\.NET SDK\v2.3")) {
-        cmd.exe /c "webpicmd /Install /AcceptEula /SuppressReboot /Products:WindowsAzureSDK_2_3,VWDOrVs2013AzurePack.2.3,WindowsAzurePowershell" 2>&1 | Out-Default
-    } else {
-        Write-Output "Windows Azure SDK 2.3 already installed`r`n"
-    }
-}
-
-function Install-Office2013Iso($iso, $msp) {
-    if (-not (Test-Path "C:\Program Files\Microsoft Office\Office15")) {
-        $iso = Join-Path (Get-SourcePath) $iso
-        $msp = Join-Path (Get-SourcePath) $msp
-        Write-Output "Installing Office 2013 Professional Plus from .iso`r`n"
-        $mount = Mount-DiskImage $iso -PassThru | Get-Volume
-        Start-Process -FilePath "$($mount.DriveLetter):\setup.exe" -ArgumentList "/adminfile ""$msp""" -Wait
-        Dismount-DiskImage $iso
-        Add-Todo "Open Office program and enter product key"
-    } else {
-        Write-Output "Office 2013 already installed`r`n"
-    }
-}
-
-function Install-OutlookSignatures($signaturesPath) {
-    if (-not (Test-Path "$env:APPDATA\Microsoft\Signatures")) {
-        Write-Output "Copying in Outlook signatures`r`n"
-        cp $signaturesPath "$env:APPDATA\Microsoft" -Recurse
-    } else {
-        Write-Output "Outlook signatures already installed`r`n"
-    }
 }
 
 function Add-ToPath($path) {
@@ -226,58 +139,50 @@ function Add-ToPath($path) {
     }
 }
 
-function Set-TortoiseGitToUseSshKeys() {
-    Write-Output "Configuring TortoiseGit to use SSH rather than PLink`r`n"
-    Set-ItemProperty "HKCU:\Software\TortoiseGit" SSH "C:\Program Files (x86)\Git\bin\ssh.exe"
-}
+function Get-ComFolderItem() {
+    [CMDLetBinding()]
+    param(
+        [Parameter(Mandatory=$true)] $Path
+    )
 
-function Set-TaskBarPin($path, $exe) {
-    if (Test-Path "$path\$exe") {
-        Write-Output "Pinning $path\$exe to the taskbar`r`n"
-        $shell = new-object -com "Shell.Application"  
-        $folder = $shell.Namespace($path)    
-        $item = $folder.Parsename($exe)
-        $item.invokeverb("taskbarpin")
+    $ShellApp = New-Object -ComObject 'Shell.Application'
+    $Item = Get-Item $Path -ErrorAction Stop
+
+    if ($Item -is [System.IO.FileInfo]) {
+        $ComFolderItem = $ShellApp.Namespace($Item.Directory.FullName).ParseName($Item.Name)
+    } elseif ($Item -is [System.IO.DirectoryInfo]) {
+        $ComFolderItem = $ShellApp.Namespace($Item.Parent.FullName).ParseName($Item.Name)
+    } else {
+        throw "Path is not a file nor a directory"
+    }
+
+    return $ComFolderItem
+}
+function Set-TaskBarPin() {
+    [CMDLetBinding()]
+    param(
+        [Parameter(Mandatory=$true)] [System.IO.FileInfo] $Item
+    )
+
+    if (Test-Path $Item) {
+        Write-Output "Pinning $Item to the taskbar`r`n"
+        $Pinned = Get-ComFolderItem -Path $Item
+    
+        $Pinned.invokeverb('taskbarpin')
     }
 }
 
 function Set-TaskBarPinChrome() {
-    Set-TaskBarPin "C:\Program Files (x86)\Google\Chrome\Application" "chrome.exe"
+    Set-TaskBarPin "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
 }
-function Set-TaskBarPinOutlook2013() {
-    Set-TaskBarPin "C:\Program Files\Microsoft Office\Office15" "outlook.exe"
+function Set-TaskBarPinVisualStudio2019() {
+    Set-TaskBarPin "C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\Common7\IDE\devenv.exe"
 }
-function Set-TaskBarPinVisualStudio2013() {
-    Set-TaskBarPin "C:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\IDE" "devenv.exe"
+function Set-TaskBarPinVsCode() {
+    Set-TaskBarPin "$env:localappdata\Programs\Microsoft VS Code\Code.exe"
 }
-function Set-TaskBarPinLinqpad4() {
-    Set-TaskBarPin "C:\Program Files (x86)\LINQPad4" "linqpad.exe"
-}
-function Set-TaskBarPinLync2013() {
-    Set-TaskBarPin "C:\Program Files\Microsoft Office\Office15" "lync.exe"
-}
-function Set-TaskBarPinOneNote2013() {
-    Set-TaskBarPin "C:\Program Files\Microsoft Office\Office15" "onenote.exe"
-}
-function Set-TaskBarPinRDP() {
-    Set-TaskBarPin "C:\Windows\system32" "mstsc.exe"
-}
-function Set-TaskBarPinSSMS2014() {
-    Set-TaskBarPin "C:\Program Files (x86)\Microsoft SQL Server\120\Tools\Binn\ManagementStudio" "Ssms.exe"
-}
-function Set-TaskBarPinSQLProfiler2014() {
-    Set-TaskBarPin "C:\Program Files (x86)\Microsoft SQL Server\120\Tools\Binn" "profiler.exe"
-}
-function Set-TaskBarPinPaintDotNet() {
-    Set-TaskBarPin "C:\Program Files\Paint.NET" "PaintDotNet.exe"
-}
-
-function Install-VS2013Extension($vsixUrl) {
-    Write-Output "Installing VS extension: $vsixUrl`r`n"
-    $vsixPath = Join-Path ([IO.Path]::GetTempPath()) ($vsixUrl.Substring($vsixUrl.LastIndexOf("/") + 1))
-
-    (new-object net.webclient).DownloadFile($vsixUrl, $vsixPath)
-    Start-Process -FilePath "C:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\IDE\VSIXInstaller.exe" -ArgumentList """$vsixPath"" /quiet" -Wait
+function Set-TaskBarPinSlack() {
+    Set-TaskBarPin "$env:localappdata\slack\slack.exe"
 }
 
 function Install-ChocolateyPackage {
@@ -299,55 +204,9 @@ function Install-ChocolateyPackage {
             iex "cinst $PackageName" | Out-Default
         }
 
-        if ($RunIfInstalled -ne $null) {
+        if ($null -ne $RunIfInstalled) {
             &$RunIfInstalled
         }
-    }
-}
-
-function Install-ITunesMusicLibrary($pathToMusicLibrary) {
-    if (-not (Test-Path "~\Music\iTunes")) {
-        Write-Output "Copying in iTunes library`r`n"
-        cp $pathToMusicLibrary "~\Music" -Recurse
-    } else {
-        Write-Output "iTunes library already installed`r`n"
-    }
-}
-
-function Install-AzureManagementStudio() {
-    if (-not (Test-Path "$env:APPDATA\Cerebrata Software\AMS")) {
-        Write-Output "Installing Azure Management Studio`r`n"
-        if (-not (Test-Path "Installers\AzureManagementStudio.exe")) {
-            # todo: Why isn't this working?
-            (new-object net.webclient).DownloadFile("http://installers.cerebrata.com/setup/Azure%20Management%20Studio/production/1/Azure%20Management%20Studio.exe", "Installers\AzureManagementStudio.exe")
-        }
-        & Installers\AzureManagementStudio.exe | Out-Default
-        # todo: get this to actually install
-        Add-Todo "Add Azure Management Studio license key"
-    } else {
-        Write-Output "Azure Management Studio already installed`r`n"
-    }
-}
-
-function Install-HyperV() {
-    if (-not (Test-Path "C:\Program Files\Hyper-V")) {
-        cinst Microsoft-Hyper-V -Source WindowsFeatures | Out-Default
-        Write-Warning "Until you restart your computer Hyper-V will not be enabled"
-    } else {
-        Write-Output "HyperV already installed`r`n"
-    }
-}
-
-function Install-SQLServerExpress2014AndManagementStudio() {
-    if (-not (Test-Path "C:\Program Files\Microsoft SQL Server\MSSQL12.SQLEXPRESS")) {
-        Write-Output "Installing SQL Server 2014 Express`r`n"
-        if (Test-Path "Installers\SQLEXPRWT_x64_ENU\setup.exe") {
-            Installers\SQLEXPRWT_x64_ENU\setup.exe /QUIETSIMPLE /ACTION=install /FEATURES=SQL,Tools /IAcceptSQLServerLicenseTerms /INSTANCENAME="SQLExpress"
-        } else {
-            throw "Download http://care.dlservice.microsoft.com/dl/download/E/A/E/EAE6F7FC-767A-4038-A954-49B8B05D04EB/SQLEXPRWT_x64_ENU.exe and extract to Installers\SQLEXPRWT_x64_ENU"
-        }
-    } else {
-        Write-Output "SQL Server 2014 Express already installed`r`n"
     }
 }
 
