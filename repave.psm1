@@ -74,6 +74,12 @@ function Test-VirtualMachine() {
 }
 
 function Set-AdvancedWindowsExplorerOptions() {
+    Set-ShowHiddenFiles
+    Set-FullContextMenus
+    Set-DisableBingSearchResults
+}
+
+function Set-ShowHiddenFiles {
     $key = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
     
     if (($key | Get-ItemProperty -Name "Hidden").Hidden -ne 1) {
@@ -81,6 +87,28 @@ function Set-AdvancedWindowsExplorerOptions() {
         Set-ItemProperty $key HideFileExt 0
         Set-ItemProperty $key ShowSuperHidden 1
         Stop-Process -processname explorer
+    }
+}
+
+function Set-FullContextMenus {
+    $key = "HKCU:\SOFTWARE\CLASSES\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32"
+    if (Test-Path $key) {
+        write-host 'Context menus already set'
+    } else {
+        New-ItemProperty -Path $key -Value ””  -PropertyType "String"
+    }
+}
+
+function Set-DisableBingSearchResults {
+    $key = "HKCU:\SOFTWARE\Policies\Microsoft\Windows\Explorer"
+    if (Test-Path $key) {
+        if (($key | Get-ItemProperty -Name "DisableSearchBoxSuggestions").DisableSearchBoxSuggestions -ne 1) {
+            Set-ItemProperty $key DisableSearchBoxSuggestions 1
+        } else {
+            write-host 'Bing search results already disabled'
+        }
+    } else {
+        New-ItemProperty -Path $key -Name "DisableSearchBoxSuggestions" -Value 1  -PropertyType "DWORD"
     }
 }
 
@@ -119,16 +147,6 @@ function Check-WindowsFeature {
         [Parameter(Position=0,Mandatory=$true)] [string]$FeatureName 
     )  
     return (Get-WindowsOptionalFeature -FeatureName $FeatureName -Online).State -eq "Enabled"
-}
-
-function Install-VisualStudio2019() {
-    $vs2019Exe = "Installers\vs_professional.exe"
-    if (-not (Test-Path $vs2019Exe)) {
-        $vs2019Url = 'https://download.visualstudio.microsoft.com/download/pr/3a7354bc-d2e4-430f-92d0-9abd031b5ee5/5f7b7f9ddaecfdb28c06d93129af3ea3dd8f600127b7e5161f11339da363df78/vs_Professional.exe'
-        Invoke-WebRequest -Uri $vs2019Url -OutFile $vs2019Exe
-    }
-    Start-Process -FilePath $vs2019Exe -ArgumentList "--config Configurations/.vsconfig --wait --passive --norestart" -Wait
-    Add-Todo "Open Visual Studio and log in with MSDN credentials"
 }
 
 function Add-ToPath($path) {

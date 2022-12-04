@@ -27,11 +27,12 @@ Invoke-Repave {
     Copy-GitConfig
 
     Install-Wsl2
-    
-    # Visual Studio
-    Install-VisualStudio2019 "https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=professional&utm_content=download+commandline+parameters+vs2019+rc"
-    Install-ChocolateyPackage ReSharper
 
+    # IDEs
+    Install-ChocolateyPackage jetbrainstoolbox
+    Install-ChocolateyPackage visualstudio2022professional
+    Install-ChocolateyPackage vscode
+    
     Install-ChocolateyPackage GitKraken
     Install-ChocolateyPackage git
     Install-ChocolateyPackage linqpad6 -RunIfInstalled { Add-Todo "Register linqpad via: LINQPad.exe -activate=PRODUCT_CODE" }
@@ -46,8 +47,6 @@ Invoke-Repave {
     Install-ChocolateyPackage lens
 
     # Utils
-    Install-ChocolateyPackage vscode
-    Install-ChocolateyPackage microsoft-windows-terminal
     Install-ChocolateyPackage greenshot
     Install-ChocolateyPackage sysinternals
     Install-ChocolateyPackage windirstat
