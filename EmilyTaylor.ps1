@@ -35,8 +35,7 @@ Invoke-Repave {
     
     Install-ChocolateyPackage GitKraken
     Install-ChocolateyPackage git
-    Install-ChocolateyPackage linqpad6 -RunIfInstalled { Add-Todo "Register linqpad via: LINQPad.exe -activate=PRODUCT_CODE" }
-    Install-ChocolateyPackage fiddler4
+    Install-ChocolateyPackage linqpad8 -RunIfInstalled { Add-Todo "Register linqpad via: LINQPad.exe -activate=PRODUCT_CODE" }
     Install-ChocolateyPackage azure-data-studio
     Install-ChocolateyPackage ngrok
 
@@ -59,7 +58,6 @@ Invoke-Repave {
     Install-ChocolateyPackage googlechrome
     Install-ChocolateyPackage slack
     Install-ChocolateyPackage 1password
-    Install-ChocolateyPackage lastpass
 
     # Other
     Install-ChocolateyPackage steam -RunIfInstalled { Add-Todo "Restore game backups and save games" }
@@ -68,7 +66,7 @@ Invoke-Repave {
     
     # Pin to taskbar
     Set-TaskBarPinChrome
-    Set-TaskBarPinVisualStudio2019
+    Set-TaskBarPinVisualStudio
     Set-TaskBarPinVsCode
     Set-TaskBarPinSlack
 

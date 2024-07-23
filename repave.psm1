@@ -193,8 +193,8 @@ function Set-TaskBarPin() {
 function Set-TaskBarPinChrome() {
     Set-TaskBarPin "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
 }
-function Set-TaskBarPinVisualStudio2019() {
-    Set-TaskBarPin "C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\Common7\IDE\devenv.exe"
+function Set-TaskBarPinVisualStudio() {
+    Set-TaskBarPin "C:\Program Files\Microsoft Visual Studio\2022\Professional\Common7\IDE\devenv.exe"
 }
 function Set-TaskBarPinVsCode() {
     Set-TaskBarPin "$env:localappdata\Programs\Microsoft VS Code\Code.exe"
