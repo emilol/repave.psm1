@@ -51,11 +51,11 @@ Shutting down the environment involves:
 1. Gets the path of the `.ps1` script being executed and saves it to a global variable called `$scriptpath`; you can use this variable from your scripts
 2. Changes directory to `$scriptpath` so any local file references will be local to the script no matter what the working directory was when the script was first executed
 3. Sets `$ErrorActionPreference` to `stop` so any errors will cause an exception to throw and the repave script to early exit
-    * There is currently a bug where problems in programs that are executed (e.g. `cinst`) don't propagate out
+    * There is currently a bug where problems in programs that are executed (e.g. `choco install`) don't propagate out
 
 ### Install-Chocolatey
 
-Install Chocolatey if not already installed (and record which Chocolatey packages were installed when the script was first run so it can detect if it should invoke `cinst` when installing packages - this is a huge speed boost on subsequent script runs).
+Install Chocolatey if not already installed (and record which Chocolatey packages were installed when the script was first run so it can detect if it should invoke `choco install` when installing packages - this is a huge speed boost on subsequent script runs).
 
 ### Get-SourcePath
 

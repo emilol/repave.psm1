@@ -48,7 +48,7 @@ function Start-Script() {
 function Install-Chocolatey() {
     try {
         (iex "clist -lo") -Replace "^Reading environment variables.+$","" | Set-Variable -Name "installedPackages" -Scope Global
-        Write-Output "cinst already installed with the following packages:`r`n"
+        Write-Output "choco install already installed with the following packages:`r`n"
         Write-Output $global:installedPackages
         Write-Output "`r`n"
     }
@@ -134,8 +134,8 @@ function Copy-GitConfig($workFolder) {
 
 function Install-Wsl2() {
     if (-not (Check-WindowsFeature Microsoft-Windows-Subsystem-Linux)) {
-        cinst Microsoft-Windows-Subsystem-Linux -Source WindowsFeatures | Out-Default
-        cinst VirtualMachinePlatform  -Source WindowsFeatures | Out-Default
+        choco install Microsoft-Windows-Subsystem-Linux -Source WindowsFeatures | Out-Default
+        choco install VirtualMachinePlatform  -Source WindowsFeatures | Out-Default
         wsl --set-default-version 2
     }
     Install-ChocolateyPackage wsl-ubuntu-2004
@@ -215,11 +215,11 @@ function Install-ChocolateyPackage {
         Write-Output "$PackageName already installed`r`n"
     } else {
         if ($InstallArgs -ne $null -and $InstallArgs -ne "") {
-            Write-Output "cinst $PackageName -InstallArguments ""$InstallArgs""`r`n"
-            iex "cinst $PackageName -InstallArguments ""$InstallArgs""" | Out-Default
+            Write-Output "choco install $PackageName -InstallArguments ""$InstallArgs""`r`n"
+            iex "choco install $PackageName -InstallArguments ""$InstallArgs""" | Out-Default
         } else {
-            Write-Output "cinst $PackageName`r`n"
-            iex "cinst $PackageName" | Out-Default
+            Write-Output "choco install $PackageName`r`n"
+            iex "choco install $PackageName" | Out-Default
         }
 
         if ($null -ne $RunIfInstalled) {
